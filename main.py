@@ -19,7 +19,7 @@ play_time = 0  # Keep track of the total play time
 def playSound():
     global play_time
     play_interval = random.randint(15, 60)  # Play a sound every 30 seconds
-    total_play_duration = 300  # Total play duration of 5 minutes (300 seconds)
+    total_play_duration = 900  # Total play duration of 15 minutes (300 seconds)
 
     if play_time < total_play_duration:
         sounds = [f for f in os.listdir('sounds') if f.endswith('.mp3')]
