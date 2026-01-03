@@ -257,7 +257,7 @@ async def remove_sound(ctx, sound_name: str):
     else:
         await ctx.send(f"Sound '{sound_name}' not found.")
 
-@bot.command(name='gui')
+@bot.command(name='gui', aliases=['soundboard'])
 async def soundboard_gui(ctx):
     """Opens an interactive soundboard."""
     load_config()
