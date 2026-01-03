@@ -1,0 +1,10 @@
+services:
+  bot:
+    build: .
+    container_name: matibbot
+    env_file:
+      - .env
+    volumes:
+      - ./sounds:/app/sounds
+      - ./sound_config.json:/app/sound_config.json
+    restart: unless-stopped
