@@ -28,6 +28,7 @@ bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
 # Global state
 sound_config = {}
+alone_time = {}
 
 class SoundButton(discord.ui.Button):
     def __init__(self, sound_name, file_name):
@@ -85,6 +86,25 @@ async def on_ready():
     load_config()
     if not random_sound_loop.is_running():
         random_sound_loop.start()
+    if not auto_disconnect_loop.is_running():
+        auto_disconnect_loop.start()
+
+@tasks.loop(seconds=60)
+async def auto_disconnect_loop():
+    for vc in bot.voice_clients:
+        # Check if bot is alone in the channel (members includes the bot itself)
+        if len(vc.channel.members) == 1:
+            guild_id = vc.guild.id
+            alone_time[guild_id] = alone_time.get(guild_id, 0) + 1
+            
+            if alone_time[guild_id] >= 5:
+                await vc.disconnect()
+                print(f"Disconnected from {vc.guild.name} due to inactivity.")
+                del alone_time[guild_id]
+        else:
+            # Reset timer if not alone
+            if vc.guild.id in alone_time:
+                alone_time[vc.guild.id] = 0
 
 @tasks.loop(seconds=1) # Dummy interval, we control it inside
 async def random_sound_loop():
