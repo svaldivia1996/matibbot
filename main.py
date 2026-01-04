@@ -50,7 +50,7 @@ class SoundButton(discord.ui.Button):
         file_path = os.path.join(SOUNDS_DIR, self.file_name)
         try:
             vc.play(discord.FFmpegPCMAudio(file_path))
-            await interaction.response.send_message(f"🔊 Playing **{self.label}**", ephemeral=True, delete_after=2)
+            await interaction.response.defer()
         except Exception as e:
             await interaction.response.send_message(f"Error: {e}", ephemeral=True)
 
