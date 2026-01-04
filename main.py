@@ -13,8 +13,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 # Configuration
 SOUNDS_DIR = 'sounds'
 CONFIG_FILE = 'sound_config.json'
-MIN_INTERVAL = 30
-MAX_INTERVAL = 120
+MIN_INTERVAL = 120
+MAX_INTERVAL = 300
 
 # Ensure sounds directory exists
 if not os.path.exists(SOUNDS_DIR):
