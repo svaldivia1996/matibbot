@@ -241,21 +241,31 @@ async def disable_sound(ctx, sound_name: str):
 
 @bot.command(name='add')
 async def add_sound(ctx):
-    """Adds a sound file attached to the message."""
+    """Adds sound files attached to the message."""
     if not ctx.message.attachments:
-        await ctx.send("Please attach an audio file (mp3, wav, ogg).")
+        await ctx.send("Please attach at least one audio file (mp3, wav, ogg).")
         return
 
-    attachment = ctx.message.attachments[0]
-    if not attachment.filename.endswith(('.mp3', '.wav', '.ogg')):
-        await ctx.send("Invalid file type. Please upload mp3, wav, or ogg.")
-        return
+    added_files = []
+    invalid_files = []
 
-    save_path = os.path.join(SOUNDS_DIR, attachment.filename)
-    await attachment.save(save_path)
+    for attachment in ctx.message.attachments:
+        if not attachment.filename.endswith(('.mp3', '.wav', '.ogg')):
+            invalid_files.append(attachment.filename)
+            continue
+
+        save_path = os.path.join(SOUNDS_DIR, attachment.filename)
+        await attachment.save(save_path)
+        added_files.append(attachment.filename)
     
-    load_config() # Update config with new file
-    await ctx.send(f"Added sound: {attachment.filename}")
+    if added_files:
+        load_config() # Update config with new files
+        msg = f"Added {len(added_files)} sound(s): {', '.join(added_files)}"
+        if invalid_files:
+            msg += f"\nSkipped invalid files: {', '.join(invalid_files)}"
+        await ctx.send(msg)
+    elif invalid_files:
+        await ctx.send(f"No valid audio files found. Skipped: {', '.join(invalid_files)}")
 
 @bot.command(name='remove', aliases=['delete'])
 async def remove_sound(ctx, sound_name: str):
