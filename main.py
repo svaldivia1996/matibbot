@@ -55,11 +55,17 @@ class SoundButton(discord.ui.Button):
             await interaction.response.send_message(f"Error: {e}", ephemeral=True)
 
 def load_config():
-    global sound_config
+    global sound_config, MIN_INTERVAL, MAX_INTERVAL
     # Load existing config
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as f:
             sound_config = json.load(f)
+    
+    # Load settings from config if present
+    if 'min_interval' in sound_config:
+        MIN_INTERVAL = sound_config['min_interval']
+    if 'max_interval' in sound_config:
+        MAX_INTERVAL = sound_config['max_interval']
     
     # Sync with actual files
     files = [f for f in os.listdir(SOUNDS_DIR) if f.endswith(('.mp3', '.wav', '.ogg'))]
@@ -69,14 +75,20 @@ def load_config():
         if f not in sound_config:
             sound_config[f] = True
             
-    # Remove missing files from config
-    for f in list(sound_config.keys()):
-        if f not in files:
-            del sound_config[f]
+    # Remove missing files from config (but preserve settings)
+    for key in list(sound_config.keys()):
+        if key in ['min_interval', 'max_interval']:
+            continue
+        if key not in files:
+            del sound_config[key]
             
     save_config()
 
 def save_config():
+    # Update config with current settings
+    sound_config['min_interval'] = MIN_INTERVAL
+    sound_config['max_interval'] = MAX_INTERVAL
+    
     with open(CONFIG_FILE, 'w') as f:
         json.dump(sound_config, f, indent=4)
 
@@ -194,6 +206,24 @@ async def play(ctx, sound_name: str = None):
             await ctx.send(f"Error playing sound: {e}")
     else:
         await ctx.send(f"Sound '{sound_name}' not found.")
+
+@bot.command(name='set_intervals')
+async def set_intervals(ctx, min_seconds: int, max_seconds: int):
+    """Sets the min and max intervals (in seconds) for the sound loop. Usage: !set_intervals <min> <max>"""
+    global MIN_INTERVAL, MAX_INTERVAL
+    
+    if min_seconds < 1:
+        await ctx.send("Minimum interval must be at least 1 second.")
+        return
+        
+    if min_seconds >= max_seconds:
+        await ctx.send("Minimum interval must be less than maximum interval.")
+        return
+        
+    MIN_INTERVAL = min_seconds
+    MAX_INTERVAL = max_seconds
+    save_config()
+    await ctx.send(f"Intervals updated: Min = {MIN_INTERVAL}s, Max = {MAX_INTERVAL}s")
 
 @bot.command(name='list')
 async def list_sounds(ctx):
@@ -323,7 +353,8 @@ async def help_command(ctx):
         ("!enable <name>", "Enables a sound for random playback."),
         ("!disable <name>", "Disables a sound for random playback."),
         ("!add", "Upload an attached audio file (mp3, wav, ogg)."),
-        ("!remove <name>", "Permanently deletes a sound file.")
+        ("!remove <name>", "Permanently deletes a sound file."),
+        ("!set_intervals <min> <max>", "Sets the random sound loop intervals.")
     ]
 
     for name, desc in commands_list:
