@@ -223,7 +223,11 @@ async def set_intervals(ctx, min_seconds: int, max_seconds: int):
     MIN_INTERVAL = min_seconds
     MAX_INTERVAL = max_seconds
     save_config()
-    await ctx.send(f"Intervals updated: Min = {MIN_INTERVAL}s, Max = {MAX_INTERVAL}s")
+
+    if random_sound_loop.is_running():
+        random_sound_loop.restart()
+
+    await ctx.send(f"Intervals updated and loop restarted: Min = {MIN_INTERVAL}s, Max = {MAX_INTERVAL}s")
 
 @bot.command(name='list')
 async def list_sounds(ctx):
